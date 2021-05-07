@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const thingSchema = mongoose.Schema({
+const saucesSchema = mongoose.Schema({
   name: { type: String, required: true },
   manufacturer: { type: String, required: true },
   description: { type: String, required: true },
@@ -14,6 +14,4 @@ const thingSchema = mongoose.Schema({
   usersDisliked: { type: Array, required: true},
 });
 
-module.exports = mongoose.model("Thing", thingSchema);
-
-// moongoos.preInsert= 
+module.exports = mongoose.model("Sauces", saucesSchema);

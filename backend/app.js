@@ -2,14 +2,16 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 
-const stuffRoutes = require("./routes/stuff");
+require('dotenv').config();
+
+const saucesRoutes = require("./routes/sauces");
 const userRoutes = require("./routes/user");
 const path = require('path');
 
 const app = express();
 
 mongoose
-  .connect("mongodb+srv://mathias_g:XCu7GfhXDZhSn7HD@sopekocko.knr5m.mongodb.net/myFirstDatabase", {
+  .connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@sopekocko.knr5m.mongodb.net/myFirstDatabase`, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
@@ -29,7 +31,7 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use("/images", express.static(path.join(__dirname, "images")));
 
-app.use("/api/sauces", stuffRoutes);
+app.use("/api/sauces", saucesRoutes);
 app.use("/api/auth", userRoutes);
 
 module.exports = app;
