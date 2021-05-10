@@ -44,10 +44,12 @@ exports.likeThing = (req, res, next) => {
     .then((sauceUnique) => {
       switch (req.body.like) {
         case 1:
+          if (sauceUnique.usersLiked.indexOf(req.body.userId) != -1) break;
           sauceUnique.usersLiked.push(req.body.userId);
           sauceUnique.likes += 1;
           break;
         case -1:
+          if (sauceUnique.usersDisliked.indexOf(req.body.userId) != -1) break;
           sauceUnique.usersDisliked.push(req.body.userId);
           sauceUnique.dislikes += 1;
           break;
