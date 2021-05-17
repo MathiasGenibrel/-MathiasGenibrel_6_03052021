@@ -5,7 +5,7 @@ const auth = require("../middleware/auth");
 const multer = require("../middleware/multer-config");
 
 router.post("/", auth, multer, stuffCtrl.createThing);
-router.post("/:id/like", auth, stuffCtrl.likeThing)
+router.post("/:id/like", auth, stuffCtrl.likeThing);
 
 router.put("/:id", auth, multer, stuffCtrl.modifyThing);
 

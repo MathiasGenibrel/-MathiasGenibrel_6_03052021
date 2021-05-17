@@ -2,13 +2,12 @@ const Sauce = require("../models/sauce");
 const fs = require("fs");
 
 exports.createThing = (req, res, next) => {
-  const thingObject = JSON.parse(req.body.sauce);
-  delete thingObject._id;
-  const thing = new Sauce({
-    ...thingObject,
+  const sauce = JSON.parse(req.body.sauce);
+
+  new Sauce({
+    ...sauce,
     imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename}`,
-  });
-  thing
+  })
     .save()
     .then(() => res.status(201).json({ message: "Objet enregistré !" }))
     .catch((error) => res.status(400).json({ error }));
@@ -21,7 +20,7 @@ exports.modifyThing = (req, res, next) => {
         imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename}`,
       }
     : { ...req.body };
-    Sauce.updateOne({ _id: req.params.id }, { ...thingObject, _id: req.params.id })
+  Sauce.updateOne({ _id: req.params.id }, { ...thingObject, _id: req.params.id })
     .then(() => res.status(200).json({ message: "Objet modifié !" }))
     .catch((error) => res.status(400).json({ error }));
 };
@@ -29,7 +28,8 @@ exports.modifyThing = (req, res, next) => {
 exports.deleteThing = (req, res, next) => {
   Sauce.findOne({ _id: req.params.id })
     .then((thing) => {
-      const filename = thing.imageUrl.split("/images/")[1];
+      const [_, filename] = thing.imageUrl.split("/images/");
+
       fs.unlink(`images/${filename}`, () => {
         Sauce.deleteOne({ _id: req.params.id })
           .then(() => res.status(200).json({ message: "Objet supprimé !" }))
@@ -42,37 +42,59 @@ exports.deleteThing = (req, res, next) => {
 exports.likeThing = (req, res, next) => {
   Sauce.findOne({ _id: req.params.id })
     .then((sauceUnique) => {
-      switch (req.body.like) {
-        case 1:
-          if (sauceUnique.usersLiked.indexOf(req.body.userId) != -1) break;
-          sauceUnique.usersLiked.push(req.body.userId);
-          sauceUnique.likes += 1;
-          break;
-        case -1:
-          if (sauceUnique.usersDisliked.indexOf(req.body.userId) != -1) break;
-          sauceUnique.usersDisliked.push(req.body.userId);
-          sauceUnique.dislikes += 1;
-          break;
-        case 0:
-          if (sauceUnique.usersLiked.find(user => user == req.body.userId) == req.body.userId) {
-            sauceUnique.usersLiked.splice(sauceUnique.usersLiked.indexOf(req.body.userId), 1);
-            sauceUnique.likes -= 1;
-          }
-          if (sauceUnique.usersDisliked.find(user => user == req.body.userId) == req.body.userId) {
-            sauceUnique.usersDisliked.splice(sauceUnique.usersDisliked.indexOf(req.body.userId), 1);
-            sauceUnique.dislikes -= 1;
-          }
-          break;
-      }
+      const userID = req.body.userId;
+      const like = req.body.like;
+
       Sauce.updateOne(
         { _id: req.params.id },
         {
-          $set: {
-            usersLiked: sauceUnique.usersLiked,
-            usersDisliked: sauceUnique.usersDisliked,
-            likes: sauceUnique.likes,
-            dislikes: sauceUnique.dislikes,
-          },
+          $set: (() => {
+            if (like === 1) {
+              if (sauceUnique.usersLiked.find((_userID) => _userID === userID)) {
+                return {};
+              }
+
+              return {
+                usersLiked: [...sauceUnique.usersLiked, userID],
+                likes: sauceUnique.usersLiked.length + 1,
+              };
+            }
+
+            if (like === -1) {
+              if (sauceUnique.usersDisliked.find((_userID) => _userID === userID)) {
+                return {};
+              }
+
+              return {
+                usersDisliked: [...sauceUnique.usersDisliked, userID],
+                dislikes: sauceUnique.usersDisliked.length + 1,
+              };
+            }
+
+            if (like === 0) {
+              let set = {};
+
+              if (sauceUnique.usersDisliked.find((_userID) => _userID === userID)) {
+                set = {
+                  ...set,
+                  usersDisliked: sauceUnique.usersDisliked.filter((_userID) => _userID !== userID),
+                  dislikes: sauceUnique.usersDisliked.length - 1,
+                };
+              }
+
+              if (sauceUnique.usersLiked.find((_userID) => _userID === userID)) {
+                set = {
+                  ...set,
+                  usersLiked: sauceUnique.usersLiked.filter((_userID) => _userID !== userID),
+                  likes: sauceUnique.usersLiked.length - 1,
+                };
+              }
+
+              return set;
+            }
+
+            return {};
+          })(),
         }
       )
         .then(() => res.status(200).json({ message: "Actualisation like de la sauce" }))
@@ -92,7 +114,3 @@ exports.getAllThing = (req, res, next) => {
     .then((things) => res.status(200).json(things))
     .catch((error) => res.status(400).json({ error }));
 };
-
-(ID) => (DOCUMENT) => USER_LIKE_ID;
-
-//https://mongoosejs.com/docs/populate.html
