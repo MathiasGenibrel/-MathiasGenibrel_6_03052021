@@ -1,5 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const helmet = require("helmet")
 
 require("dotenv").config();
 
@@ -30,6 +31,7 @@ mongoose
   next();
 });
 
+app.use(helmet());
 app.use(express.json());
 
 app.use("/images", express.static(path.join(__dirname, "images")));
