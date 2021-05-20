@@ -5,7 +5,7 @@ const SALT_WORK_FACTOR = 10;
 
 const userSchema = mongoose.Schema({
   email: { type: String, require: true, unique: true },
-  password: { type: String, require: true, match: /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/gm},
+  password: { type: String, require: true, minLength: 8},
 });
 
 userSchema.plugin(uniqueValidator);
